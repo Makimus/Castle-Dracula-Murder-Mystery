@@ -1,9 +1,10 @@
-// Last update: 20/09/2023
+// Last update: 22/09/2023
 // Start date: 20/09/2023
 // By Max Tittle, Vasile-Daniel Dan, Erica Taylor
 // UK
 
 #include <iostream>
+#include <cstdlib>
 
 #include "Room.h"
 #include "assets.h"
@@ -14,12 +15,9 @@ using namespace std;
 
 
 // ********************************FUNCTIONS******************************************
-//void performCommand(string _command)
-//{
-//	
-//}
 
-bool CheckKeyWord(string _KeyWord, Character* _Character)
+//used to compare input to character keywords
+bool CheckCharacterKeyWord(string _KeyWord, Character* _Character)
 {
     for (int i = 0; i < _Character->getKeyWords().size(); i++)
     {
@@ -30,65 +28,100 @@ bool CheckKeyWord(string _KeyWord, Character* _Character)
     }
     return false;
 }
-
-void performInspection(Room* currentRoom)
+// does the same for rooms, in the future we should put rooms and characters as sub-classes of "interactables" so we can do the same func. for both.
+bool CheckRoomKeyWord(string _KeyWord, Room* _Room)
 {
-    string inspection;
-    cout << "What would you like to inspect in " + currentRoom->getName() + "?\n\n";
-    cin >> inspection;
-    for (int i = 0; i < currentRoom->getKeyWords().size(); i++)
+    for (int i = 0; i < _Room->getKeyWords().size(); i++)
     {
-        if (inspection == currentRoom->getKeyWords()[i])
+        if (_KeyWord == _Room->getKeyWords()[i])
         {
-            cout << currentRoom->getPromptedLines()[i] << "\n\n";
+            return true;
         }
     }
+    return false;
 }
 
+
+//The "inspect" command, will prompt you for another word to test against the room's prompts
+void performInspection(Room* currentRoom)
+{
+    string inspectionKeyWord;
+    bool inspection = true;
+    cout << "What would you like to inspect in " + currentRoom->getName() + "?\nWhen you have finished your inspection, type \"end\"\n\n> ";
+    do
+    {
+        cout << "> ";
+		cin >> inspectionKeyWord;
+		if (CheckRoomKeyWord(inspectionKeyWord, currentRoom))
+		{
+			for (int i = 0; i < currentRoom->getKeyWords().size(); i++)
+			{
+				if (inspectionKeyWord == currentRoom->getKeyWords()[i])
+				{
+					cout << currentRoom->getPromptedLines()[i] << "\n\n";
+				}
+			}  
+		}
+		else if (inspectionKeyWord == "end")
+		{
+		inspection = false;
+		}
+		else
+		{
+		    cout << "That doesn't seem to be something to inspect in this situation.\nTry a similar word or synonym.\n\n> ";
+		}
+    }
+    while (inspection == true);
+}
+// The "talk" command,  will prompt you for another word to test against the character's prompts
 void performTalk(Room* currentRoom)
 {
     string talk;
-    string keyWord;
+    string talkKeyWord;
     bool conversation = true;
-    cout << "Who would you like to talk to in " + currentRoom->getName() + "?\n\n";
+    cout << "Who would you like to talk to in " + currentRoom->getName() + "?\n\n> ";
     cin >> talk;
     if(currentRoom->linked_Characters.find(talk) != currentRoom->linked_Characters.end())
     {
 	    Character* currentChar = currentRoom->linked_Characters[talk];
-        cout << "As you approach "
+        cout << "\nAs you approach "
             + currentChar->getPronoun()[1]
             + " you see "
             + currentChar->getDescription()
-            + "\n\n";
+            + "\n";
         if (!currentChar->getSpeakingLine().empty())
         {
             cout << currentChar->getSpeakingLine()[0] + "\n\n";
         }
         do
         {
-            cout << "What would you like to talk about with " + currentChar->getName() + "\n\n";
-            cout << "to finish the conversation type \"end\"\n";
-            cin >> keyWord;
-            if (CheckKeyWord(keyWord, currentChar))
+            cout << "What would you like to talk about with " + currentChar->getName() + "\n";
+            cout << "to finish the conversation type \"end\"\n\n> ";
+            cin >> talkKeyWord;
+            if (CheckCharacterKeyWord(talkKeyWord, currentChar))
             {
                 for (int i = 0; i < currentChar->getKeyWords().size(); i++)
                 {
-                    if (keyWord == currentChar->getKeyWords()[i])
+                    if (talkKeyWord == currentChar->getKeyWords()[i])
                     {
                         cout << currentChar->getPromptedLine()[i] << "\n\n";
                     }
                 }
             }
-            if (keyWord == "end")
+            else if (talkKeyWord == "end")
             {
                 conversation = false;
+            }
+            else
+            {
+                cout << "They don't seem to know anything about that.\nTry a similar word or synonym\n\n> ";
             }
 
         } while (conversation);
     }
     else
     {
-        cout << "they are not in this room.\n\n";
+        cout << "They are not in this room.\n\n> ";
     }
     
     
@@ -102,12 +135,6 @@ void performTalk(Room* currentRoom)
 
 int main()
 {
-	std::cout << "Welcome to Bram Castle! there's been a murder!\n\n";
-
-
-
-
-
     ///////////   Set up GAME OBJECTS    //////////////////////////////////////////////////// 
 
     // Set up LIST OF ROOMS (9 rooms)
@@ -149,7 +176,7 @@ int main()
     courtyard.setDescription(descriptionRoom["court"]);
     throneRoom.setDescription(descriptionRoom["throne"]);
     library.setDescription(descriptionRoom["library"]);
-    queenMariesApt.setDescription(descriptionRoom["queen"]);
+    queenMariesApt.setDescription(descriptionRoom["marie"]);
     observatory.setDescription(descriptionRoom["observatory"]);
     restaurant.setDescription(descriptionRoom["restaurant"]);
     weaponRoom.setDescription(descriptionRoom["weapon"]);
@@ -225,7 +252,7 @@ int main()
 
 
 
-    // rooms top map (left to right, soth)
+    // rooms top map (left to right, south)
     library.linked_rooms["south"] = &queenMariesApt;
     throneRoom.linked_rooms["south"] = &courtyard;
     weaponRoom.linked_rooms["south"] = &restaurant;
@@ -279,19 +306,56 @@ int main()
 
 	// ************* END LINK THE PROMPTED LINES TO THE ROOMS *************************************
 
-
-
-
-
-
-
-
-
+    // *************SETTING UP INITIAL VARIABLES**********************
 	Room* currentRoom = &entranceWay;
 	Character* currentChar = &inspector;
 	string command;
     string inspection;
 	bool changeRoom = true;
+
+
+
+
+
+
+    //*********************STARTING PLAY!*************************************************************
+
+    cout << "Welcome to Bram Castle Murder Mystery!\n\n";
+    system("pause");
+
+	// a tutorial here
+
+    cout << "\nTo play, simply move around the castle and inspect the rooms, or interact with the guests.\n\n"
+        "To move, use the directions: \"north\", \"east\", \"south\", and \"west\".\n\n"
+        "If you get lost, typing \"map\" will provide you with directions to orient yourself, please\n"
+        "be aware that some adjacent rooms don't have doors between them.\n\n";
+    system("pause");
+    cout << "\nTo talk to a guest, simply type \"talk\" when in the room with a guest and type their name, eg:\n"
+        "\"talk\"\n"
+        "\"worker\"\n"
+        "You will then be prompted to ask them about something, try using different words you have encountered\n"
+        "in the game, for example you may use the key \"poison\" to ask the guests about that topic. try your\n"
+        "best and if you struggle, try using an alternative word.\n\n"
+        "There is also an \"inspect\" command you can use in the rooms to search for clues,\n"
+        "this works the same way as \"talk\" does.\n\n";
+    system("pause");
+	cout <<	"\nHave fun! We suggest using a pen and paper to keep track of different clues, there will be many ways\n"
+		"to solve this case!\n\n"
+		"Without further adieu, enjoy!\n\n";
+    system("pause");
+    // introduction appearing paragraph by paragraph
+    
+    for (int i = 1; i <= story.size(); i++)
+    {
+        cout << "\n" + story[i];
+        //cout << right << setfill('.') << setw(30) << endl;
+        system("pause");
+    }
+
+    cout << "\n";
+
+
+
 	do
 	{
 
@@ -299,7 +363,7 @@ int main()
 		if (changeRoom == true)
 		{
 			//giving you a description of the room
-			cout << "Looking around "
+			cout << "\nLooking around "
 				+ currentRoom->getName()
 				+ " you see "
 				+ currentRoom->getDescription()
