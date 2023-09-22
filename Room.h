@@ -16,12 +16,18 @@ public:
 
 	string getName();
 	string getDescription();
+	vector<string> getKeyWords();
+	vector<string> getPromptedLines();
 
 	void setName(const string name);
 	void setDescription(const string description);
+	void setKeyWords(const vector<string> keyWords);
+	void setPromptedLines(const vector<string> promptedLines);
 
 private:
 	string name_;
 	string description_;
+	vector<string> keyWords_;
+	vector<string> promptedLines_;
 };
 

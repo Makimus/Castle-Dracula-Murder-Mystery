@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <map>
 
 using namespace std;
 
@@ -15,7 +16,7 @@ public:
 	string getDescription();
 	vector<string> getSpeakingLine();
 	vector<string> getKeyWords();
-	vector<string> getPromptedLine();
+	vector<string> getPromptedLine();// 
 	vector<string> getPronoun();
 
 	void setName(const string name);

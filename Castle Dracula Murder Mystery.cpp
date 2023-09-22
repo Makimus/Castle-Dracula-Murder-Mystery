@@ -6,80 +6,283 @@
 #include <iostream>
 
 #include "Room.h"
+#include "assets.h"
+#include "Character.h"
 
 using namespace std;
 
+
+
+// ********************************FUNCTIONS******************************************
+//void performCommand(string _command)
+//{
+//	
+//}
+
+bool CheckKeyWord(string _KeyWord, Character* _Character)
+{
+    for (int i = 0; i < _Character->getKeyWords().size(); i++)
+    {
+        if (_KeyWord == _Character->getKeyWords()[i])
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void performInspection(Room* currentRoom)
+{
+    string inspection;
+    cout << "What would you like to inspect in " + currentRoom->getName() + "?\n\n";
+    cin >> inspection;
+    for (int i = 0; i < currentRoom->getKeyWords().size(); i++)
+    {
+        if (inspection == currentRoom->getKeyWords()[i])
+        {
+            cout << currentRoom->getPromptedLines()[i] << "\n\n";
+        }
+    }
+}
+
+void performTalk(Room* currentRoom)
+{
+    string talk;
+    string keyWord;
+    bool conversation = true;
+    cout << "Who would you like to talk to in " + currentRoom->getName() + "?\n\n";
+    cin >> talk;
+    if(currentRoom->linked_Characters.find(talk) != currentRoom->linked_Characters.end())
+    {
+	    Character* currentChar = currentRoom->linked_Characters[talk];
+        cout << "As you approach "
+            + currentChar->getPronoun()[1]
+            + " you see "
+            + currentChar->getDescription()
+            + "\n\n";
+        if (!currentChar->getSpeakingLine().empty())
+        {
+            cout << currentChar->getSpeakingLine()[0] + "\n\n";
+        }
+        do
+        {
+            cout << "What would you like to talk about with " + currentChar->getName() + "\n\n";
+            cout << "to finish the conversation type \"end\"\n";
+            cin >> keyWord;
+            if (CheckKeyWord(keyWord, currentChar))
+            {
+                for (int i = 0; i < currentChar->getKeyWords().size(); i++)
+                {
+                    if (keyWord == currentChar->getKeyWords()[i])
+                    {
+                        cout << currentChar->getPromptedLine()[i] << "\n\n";
+                    }
+                }
+            }
+            if (keyWord == "end")
+            {
+                conversation = false;
+            }
+
+        } while (conversation);
+    }
+    else
+    {
+        cout << "they are not in this room.\n\n";
+    }
+    
+    
+
+}
+
+
+
+//*****************************END OF FUNCTIONS*************************************
+
+
 int main()
 {
-	std::cout << "OOPs I did an Adventure Game\n";
+	std::cout << "Welcome to Bram Castle! there's been a murder!\n\n";
 
 
 
-	//set up game objects
-		//Set up the Rooms
-	Room entranceWay = Room("the entrance-way");
-	entranceWay.setDescription("entrance-way");
-	Room courtyard = Room("the courtyard");
-	courtyard.setDescription("courtyard");
-	Room throneRoom = Room("the throne room");
-	throneRoom.setDescription("thrones");
-	Room library = Room("the library");
-	library.setDescription("library");
-	Room queenMariesApt = Room("Queen Marie's apartment");
-	queenMariesApt.setDescription("The apartments");
-	Room observatory = Room("the observatory tower");
-	observatory.setDescription("an old observatory tower");
-	Room restaurant = Room("the restaurant");
-	restaurant.setDescription("A restaurant");
-	Room weaponRoom = Room("the weapon's room");
-	weaponRoom.setDescription("a room of ancient weapons");
-	Room orientalRoom = Room("the Oriental room");
-	orientalRoom.setDescription("a room of artifacts");
 
 
-	//Set up the Characters
-	Character inspector = Character("Inspector", { "he", "him" });
+    ///////////   Set up GAME OBJECTS    //////////////////////////////////////////////////// 
 
-	Character princess = Character("Penelope", { "she", "her" });
-	princess.setDescription("a young, very beautiful woman with bright red hair that is cut short into a fashionable bob. She wears a sleek blue dress with subtle rhinestones.");
-	princess.setKeyWords({ "knife" });
-	princess.setPromptedLine({ "I don't know anything about the knife" });
+    // Set up LIST OF ROOMS (9 rooms)
+    Room entranceWay;
+    Room courtyard;
+    Room throneRoom;
+    Room library;
+    Room queenMariesApt;
+    Room observatory;
+    Room restaurant;
+    Room weaponRoom;
+    Room orientalRoom;
 
-	Character baroness = Character("Helena Van Arsdale", { "she", "her" });
+    //Set up LIST OF CHARACTERS ( 5 characters)
+    Character inspector;
+    Character organizer;
+    Character princess;
+    Character baroness;
+    Character worker;
+    Character madame;
 
-	Character worker = Character("Andrzej", { "he", "him" });
+    // ************ START SET UP ROOMS ******************************************
 
-	Character madame = Character("Madame Ionescu", { "she", "her" });
-
-
-	//link up the rooms
-	entranceWay.linked_rooms["north"] = &courtyard;
-	courtyard.linked_rooms["north"] = &throneRoom;
-	courtyard.linked_rooms["east"] = &restaurant;
-	courtyard.linked_rooms["south"] = &entranceWay;
-	courtyard.linked_rooms["west"] = &queenMariesApt;
-	throneRoom.linked_rooms["south"] = &courtyard;
-	restaurant.linked_rooms["west"] = &courtyard;
-	restaurant.linked_rooms["north"] = &weaponRoom;
-	restaurant.linked_rooms["south"] = &orientalRoom;
-	weaponRoom.linked_rooms["south"] = &restaurant;
-	orientalRoom.linked_rooms["north"] = &restaurant;
-	queenMariesApt.linked_rooms["east"] = &courtyard;
-	queenMariesApt.linked_rooms["north"] = &library;
-	queenMariesApt.linked_rooms["south"] = &observatory;
-	library.linked_rooms["south"] = &queenMariesApt;
-	observatory.linked_rooms["north"] = &queenMariesApt;
+    // Set up NAMES OF THE ROOMS 
+    entranceWay.setName(nameRoom["entrance"]);
+    courtyard.setName(nameRoom["court"]);
+    throneRoom.setName(nameRoom["throne"]);
+    library.setName(nameRoom["library"]);
+    queenMariesApt.setName(nameRoom["marie"]);
+    observatory.setName(nameRoom["observatory"]);
+    restaurant.setName(nameRoom["restaurant"]);
+    weaponRoom.setName(nameRoom["weapon"]);
+    orientalRoom.setName(nameRoom["oriental"]);
 
 
-	//Link the characters to the rooms
-	entranceWay.linked_Characters["princess"] = &princess;
-	entranceWay.linked_Characters["madame"] = &madame;
 
-	restaurant.linked_Characters["worker"] = &worker;
+    // Set up DESCRIPTION OF ROOMS 
+    entranceWay.setDescription(descriptionRoom["entrance"]);
+    courtyard.setDescription(descriptionRoom["court"]);
+    throneRoom.setDescription(descriptionRoom["throne"]);
+    library.setDescription(descriptionRoom["library"]);
+    queenMariesApt.setDescription(descriptionRoom["queen"]);
+    observatory.setDescription(descriptionRoom["observatory"]);
+    restaurant.setDescription(descriptionRoom["restaurant"]);
+    weaponRoom.setDescription(descriptionRoom["weapon"]);
+    orientalRoom.setDescription(descriptionRoom["oriental"]);
 
-	queenMariesApt.linked_Characters["baroness"] = &baroness;
+    // ********** END SET UP ROOMS *********************************************
 
-	//Link the clues to the rooms
+
+    // ************ START SET UP CHARACTERS  ******************************************
+    //Set up CHARACTER NAME  
+    inspector.setName(nameCharacter["inspector"]);
+    princess.setName(nameCharacter["princess"]);
+    baroness.setName(nameCharacter["baroness"]);
+    worker.setName(nameCharacter["worker"]);
+    madame.setName(nameCharacter["madame"]);
+
+    //Set up CHARACTER PRONOUN 
+    inspector.setPronoun(pronounChar["inspector"]);
+    princess.setPronoun(pronounChar["princess"]);
+    baroness.setPronoun(pronounChar["baroness"]);
+    worker.setPronoun(pronounChar["worker"]);
+    madame.setPronoun(pronounChar["madame"]);
+
+
+    //Set up CHARACTER DESCRIPTION 
+    inspector.setDescription(descriptionCharacter["inspector"]);
+    princess.setDescription(descriptionCharacter["princess"]);
+    baroness.setDescription(descriptionCharacter["baroness"]);
+    worker.setDescription(descriptionCharacter["worker"]);
+    madame.setDescription(descriptionCharacter["madame"]);
+
+    //Set up CHARACTER KEYWORDS 
+    inspector.setKeyWords(inspectorKeyWords);
+    princess.setKeyWords(princessKeyWords);
+    baroness.setKeyWords(baronessKeyWords);
+    worker.setKeyWords(workerKeyWords);
+    madame.setKeyWords(madameKeyWords);
+
+
+    //Set up CHARACTER PROMPTED LINE
+    inspector.setPromptedLine(inspectorPromptedLine);
+    princess.setPromptedLine(princessPromptedLine);
+    baroness.setPromptedLine(baronessPromptedLine);
+    worker.setPromptedLine(workerPromptedLine);
+    madame.setPromptedLine(madamePromptedLine);
+
+    //Set up CHARACTER SPEAKING LINE 
+    inspector.setSpeakingLine(inspectorSpeakingLine);
+    princess.setSpeakingLine(princessSpeakingLine);
+    baroness.setSpeakingLine(baronessSpeakingLine);
+    worker.setSpeakingLine(workerSpeakingLine);
+    madame.setSpeakingLine(madameSpeakingLine);
+
+    // **************** END SET UP CHARACTERS ******************************************
+
+    // **************** START LINK THE ROOMS ******************************************* 
+
+    // middle map 
+    courtyard.linked_rooms["north"] = &throneRoom;
+    courtyard.linked_rooms["east"] = &restaurant;
+    courtyard.linked_rooms["south"] = &entranceWay;
+    courtyard.linked_rooms["west"] = &queenMariesApt;
+
+    // left side - middle 
+    queenMariesApt.linked_rooms["east"] = &courtyard;
+    queenMariesApt.linked_rooms["north"] = &library;
+    queenMariesApt.linked_rooms["south"] = &observatory;
+
+    // right side - middle 
+    restaurant.linked_rooms["west"] = &courtyard;
+    restaurant.linked_rooms["north"] = &weaponRoom;
+    restaurant.linked_rooms["south"] = &orientalRoom;
+
+
+
+    // rooms top map (left to right, soth)
+    library.linked_rooms["south"] = &queenMariesApt;
+    throneRoom.linked_rooms["south"] = &courtyard;
+    weaponRoom.linked_rooms["south"] = &restaurant;
+
+    // rooms bottom map (left to right, north) 
+    observatory.linked_rooms["north"] = &queenMariesApt;
+    entranceWay.linked_rooms["north"] = &courtyard;
+    orientalRoom.linked_rooms["north"] = &restaurant;
+
+    // *************** END LINK THE ROOMS  *******************************************
+
+
+
+    // ************* START LINK THE CHARACTERS TO THE ROOMS **************************
+
+    entranceWay.linked_Characters["princess"] = &princess;
+    entranceWay.linked_Characters["madame"] = &madame;
+
+    restaurant.linked_Characters["worker"] = &worker;
+
+    queenMariesApt.linked_Characters["baroness"] = &baroness;
+
+    // ************* END  LINK THE CHARACTERS TO THE ROOMS **************************
+    // 
+    // 
+    // 
+    // 
+    // ************* START LINK THE PROMPTED LINES TO THE ROOMS *************************************
+
+    entranceWay.setPromptedLines(entrancePromptedLine);
+    courtyard.setPromptedLines(courtyardPromptedLine);
+    throneRoom.setPromptedLines(thronePromptedLine);
+    library.setPromptedLines(libraryPromptedLine);
+    queenMariesApt.setPromptedLines(mariesAptPromptedLine);
+    observatory.setPromptedLines(observatoryPromptedLine);
+    restaurant.setPromptedLines(restaurantPromptedLine);
+    weaponRoom.setPromptedLines(weaponRoomPromptedLine);
+    orientalRoom.setPromptedLines(orientalRoomPromptedLine);
+
+    entranceWay.setKeyWords(entranceKeyWords);
+    courtyard.setKeyWords(courtyardKeyWords);
+    throneRoom.setKeyWords(throneKeyWords);
+    library.setKeyWords(libraryKeyWords);
+    queenMariesApt.setKeyWords(marieKeyWords);
+    observatory.setKeyWords(observatoryKeyWords);
+    restaurant.setKeyWords(restaurantKeyWords);
+    weaponRoom.setKeyWords(weaponKeyWords);
+    orientalRoom.setKeyWords(orientKeyWords);
+
+
+
+	// ************* END LINK THE PROMPTED LINES TO THE ROOMS *************************************
+
+
+
+
+
 
 
 
@@ -87,9 +290,11 @@ int main()
 	Room* currentRoom = &entranceWay;
 	Character* currentChar = &inspector;
 	string command;
+    string inspection;
 	bool changeRoom = true;
 	do
 	{
+
 		//if you change rooms you get a description, this only runs the first time you enter a room
 		if (changeRoom == true)
 		{
@@ -121,63 +326,51 @@ int main()
 		cout << "> ";
 		cin >> command;
 		//add commands here
-			//adding the capability to talk to a character in the room
-		if (currentRoom->linked_Characters.find(command) != currentRoom->linked_Characters.end())
+
+			//The basic "inspect" command for looking at the room
+		if (command == "inspect")
 		{
-			currentChar = currentRoom->linked_Characters[command];
-			cout << "As you approach "
-				+ currentChar->getPronoun()[1]
-				+ " you see "
-				+ currentChar->getDescription()
-				+ "\n\n";
-			if (!currentChar->getSpeakingLine().empty())
-			{
-				cout << currentChar->getSpeakingLine()[0];
-			}
+            performInspection(currentRoom);
 		}
-		//specific key word used?
-		else if (currentChar != &inspector)
-		{
-			for (int i = 0; i < currentChar->getKeyWords().size(); i++)
-			{
-				if (command == currentChar->getKeyWords()[i])
-				{
-					cout << currentChar->getPromptedLine()[i] << "\n";
-				}
-			}
-		}
-		//the command to change rooms
+			//The "talk" command that enters into a conversation with a chosen character
+        else if (command == "talk")
+        {
+            performTalk(currentRoom);
+        }
+			//the command to change rooms
 		else if (currentRoom->linked_rooms.find(command) != currentRoom->linked_rooms.end())
 		{
 			currentRoom = currentRoom->linked_rooms[command];
 			currentChar = &inspector; //when leaving a room the character focus returns to the inspector
 			changeRoom = true;
 		}
-		//a map command
+
+
+			//a map command
 		else if (command == "map")
 		{
 			cout << "----------------------------------------------------------\n"
-				"|                  |                  |                  |\n"
-				"|   Library        |   Throne         |    Weapon        |\n"
-				"|                  |       Room       |        Room      |\n"
-				"|                  |                  |                  |\n"
-				"|                  |                  |                  |\n"
-				"|                  |                  |                  |\n"
-				"---------  -----------------  -----------------  ---------\n"
-				"|                  |                  |                  |\n"
-				"|   Queen Marie's  |   Courtyard      |    Dining        |\n"
-				"|    apartments                                Room      |\n"
-				"|                                                        |\n"
-				"|                  |                  |                  |\n"
-				"|                  |                  |                  |\n"
-				"---------  -----------------  -----------------  ---------\n"
-				"|                  |                  |                  |\n"
-				"|   Observatory    |    Entrance      |    Oriental      |\n"
-				"|                  |        Hall      |        Room      |\n"
-				"|                  |                  |                  |\n"
-				"|                  |                  |                  |\n"
-				"|                  |                  |                  |\n"
-				"----------------------------------------------------------\n";
+					"|                  |                  |                  |\n"
+					"|   Library        |   Throne         |    Weapon        |\n"
+					"|                  |       Room       |        Room      |\n"
+					"|                  |                  |                  |\n"
+					"|                  |                  |                  |\n"
+					"|                  |                  |                  |\n"
+					"---------  -----------------  -----------------  ---------\n"
+					"|                  |                  |                  |\n"
+					"|   Queen Marie's  |   Courtyard      |    Dining        |\n"
+					"|    apartments                                Room      |\n"
+					"|                                                        |\n"
+					"|                  |                  |                  |\n"
+					"|                  |                  |                  |\n"
+					"---------  -----------------  -----------------  ---------\n"
+					"|                  |                  |                  |\n"
+					"|   Observatory    |    Entrance      |    Oriental      |\n"
+					"|                  |        Hall      |        Room      |\n"
+					"|                  |                  |                  |\n"
+					"|                  |                  |                  |\n"
+					"|                  |                  |                  |\n"
+					"----------------------------------------------------------\n\n";
 		}
 		else
 		{
